@@ -211,6 +211,7 @@ async function salvage() {
 // 进度文件路径
 const progressFile = "progress.json";
 
+const timezoneOffset = settings.timezoneOffset || "+08:00"; // 默认值为 "+08:00"
 // 初始化进度
 let progress = {
     path: null,
@@ -224,11 +225,18 @@ async function loadProgress() {
         const content = await file.readText(progressFile);
         const loadedProgress = JSON.parse(content);
 
-        // 检查日期是否一致
+        // 获取当前日期并考虑时区偏移
         const now = new Date();
-        const today = now.toISOString().split('T')[0]; // 当前日期（YYYY-MM-DD）
+        const [hours, minutes] = timezoneOffset.split(':').map(Number);
+        const totalOffsetMinutes = hours * 60 + minutes; // 将时区偏移量转换为分钟
+        // log.info(`时区偏移量，单位分钟: ${totalOffsetMinutes}`);
+        const nowWithTimezone = new Date(now.getTime() + totalOffsetMinutes * 60000);
+        const today = nowWithTimezone.toISOString().split('T')[0]; // 当前日期（YYYY-MM-DD）
+
+        // 获取保存的日期
         const lastRunDate = loadedProgress.lastRunDate;
 
+        // 检查日期是否一致
         if (lastRunDate && lastRunDate === today) {
             // 如果日期一致，加载进度
             progress.path = loadedProgress.path;
@@ -240,7 +248,8 @@ async function loadProgress() {
         }
 
         progress.lastRunDate = today; // 更新当前日期
-        log.info("加载进度成功:", progress);
+        // 日志输出
+        log.info(`加载进度成功: ${JSON.stringify(progress)}`);
     } catch (error) {
         log.error("加载进度失败:", error);
     }
@@ -249,9 +258,18 @@ async function loadProgress() {
 // 保存进度
 async function saveProgress() {
     try {
-        progress.lastRunDate = new Date().toISOString().split('T')[0]; // 更新当前日期
+        // 获取当前日期并考虑时区偏移
+        const now = new Date();
+        const [hours, minutes] = timezoneOffset.split(':').map(Number);
+        const totalOffsetMinutes = hours * 60 + minutes; // 将时区偏移量转换为分钟
+        const nowWithTimezone = new Date(now.getTime() + totalOffsetMinutes * 60000);
+        const today = nowWithTimezone.toISOString().split('T')[0]; // 当前日期（YYYY-MM-DD）
+
+        // 更新进度并保存
+        progress.lastRunDate = today;
         await file.writeText(progressFile, JSON.stringify(progress));
-        log.info("进度已保存。");
+
+        log.info(`进度已保存，当前日期: ${today}`);
     } catch (error) {
         log.error("保存进度失败:", error);
     }
