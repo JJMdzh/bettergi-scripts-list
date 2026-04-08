@@ -113,7 +113,7 @@ async function locateRarityAndCropColumn(ra, scanX0, startY, columnHeight, minYG
                 y:localYStart,
                 width:localXWidth,
                 height:localYHeight}
-                await drawAndClearRedBox(region, ra, 20);// 调用异步函数绘制红框并延时清除
+                // await drawAndClearRedBox(region, ra, 20);// 调用异步函数绘制红框并延时清除
             const localRo = RecognitionObject.TemplateMatch(
                 rarityMat,
                 localXStart,
